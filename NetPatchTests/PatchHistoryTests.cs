@@ -17,5 +17,11 @@ namespace NetPatchTests
 
             Console.WriteLine(JsonConvert.SerializeObject(patch));
         }
+
+        [Fact]
+        public void BasicSystemTextJsonExample() {
+            var patch = PatchHelper.GetPatchForObject("{}", "{}");
+            Assert.Equal(1,1);
+        }
     }
 }
