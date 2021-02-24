@@ -13,7 +13,7 @@ namespace NetPatchTests
 
         private bool PatchRoundTripMatches(string originalJson, string currentJson, string expectedPatch = null)
         {
-            JsonPatchDocument patch = PatchHelper.GeneratePatch(
+            JsonPatchDocument patch = PatchHelper.GetPatchForObject(
                         originalJson,
                         currentJson);
 
@@ -28,7 +28,7 @@ namespace NetPatchTests
 
                 if (!matchesExpectedPatch)
                 {
-                    return false;
+                    throw new Exception($"Expected Patch Does Not Match. Expected {expectedPatch}. Received {JsonConvert.SerializeObject(patch)}");
                 }
             }
 
