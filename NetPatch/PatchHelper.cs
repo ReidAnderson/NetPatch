@@ -36,12 +36,12 @@ namespace NetPatch
                 throw new Exception("Value types should not require a recursive call");
             }
 
-            HashSet<string> currentPropSet = new HashSet<string>(current.EnumerateObject().Select(eo => eo.Name));
-            HashSet<string> originalPropSet = new HashSet<string>(original.EnumerateObject().Select(eo => eo.Name));
-
             // Start by checking for properties that have just been added or removed
             if (original.ValueKind == JsonValueKind.Object)
             {
+                HashSet<string> currentPropSet = new HashSet<string>(current.EnumerateObject().Select(eo => eo.Name));
+                HashSet<string> originalPropSet = new HashSet<string>(original.EnumerateObject().Select(eo => eo.Name));
+
                 foreach (JsonProperty property in original.EnumerateObject())
                 {
                     if (!currentPropSet.Contains(property.Name))
@@ -68,7 +68,7 @@ namespace NetPatch
 
                         if (property.Value.GetRawText() != originalPropertyValue.GetRawText())
                         {
-                            if (property.Value.ValueKind == JsonValueKind.Object)
+                            if (property.Value.ValueKind == JsonValueKind.Object || property.Value.ValueKind == JsonValueKind.Array)
                             {
                                 FindPatchDiffs(originalPropertyValue, property.Value, patchDocument, $"{path}{property.Name}/");
                             }
@@ -76,24 +76,54 @@ namespace NetPatch
                             {
                                 patchDocument.Replace($"{path}{property.Name}", AddAsType(property.Value, patchDocument, current, property));
                             }
-
                         }
+                    }
+                }
+            }
+
+            if (original.ValueKind == JsonValueKind.Array)
+            {
+                List<JsonElement> originalElements = original.EnumerateArray().Select(o => o).ToList();
+                List<JsonElement> currentElements = current.EnumerateArray().Select(c => c).ToList();
+
+                if (currentElements.Count() > originalElements.Count())
+                {
+                    for (int i = originalElements.Count(); i < currentElements.Count(); i++)
+                    {
+                        string pathIdentifier = i.ToString();
+                        if (i == currentElements.Count() - 1){
+                            pathIdentifier = "-";
+                        }
+                        patchDocument.Add($"{path}{pathIdentifier}", AddAsType(currentElements[i], patchDocument, null, null));
+                    }
+                }
+
+                for (int i = 0; i < originalElements.Count(); i++)
+                {
+                    if (i > currentElements.Count())
+                    {
+                        patchDocument.Remove($"{path}{i}");
+                    }
+
+                    if (originalElements[i].GetRawText() != currentElements[i].GetRawText())
+                    {
+                        patchDocument.Replace($"{path}{i}", AddAsType(currentElements[i], patchDocument, null, null));
                     }
                 }
             }
 
         }
 
-        private static object AddAsType(JsonElement element, JsonPatchDocument patchDocument, JsonElement parentObject, JsonProperty property)
+        private static object AddAsType(JsonElement element, JsonPatchDocument patchDocument, JsonElement? parentObject, JsonProperty? property)
         {
             switch (element.ValueKind)
             {
                 case JsonValueKind.Null:
                     return null;
                 case JsonValueKind.Object:
-                    return JObject.Parse(parentObject.GetRawText()).Property(property.Name).Value;
+                    return parentObject == null ? JObject.Parse(element.GetRawText()) : JObject.Parse(parentObject.Value.GetRawText()).Property(property.Value.Name).Value;
                 case JsonValueKind.Array:
-                    return JObject.Parse(parentObject.GetRawText()).Property(property.Name).Value;
+                    return parentObject == null ? JArray.Parse(element.GetRawText()) : JObject.Parse(parentObject.Value.GetRawText()).Property(property.Value.Name).Value;
                 case JsonValueKind.Number:
                     return element.GetDouble();
                 case JsonValueKind.True:
