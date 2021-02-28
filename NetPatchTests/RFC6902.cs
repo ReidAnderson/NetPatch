@@ -11,29 +11,7 @@ namespace NetPatchTests
     public class RFC6902Tests
     {
 
-        private bool PatchRoundTripMatches(string originalJson, string currentJson, string expectedPatch = null)
-        {
-            JsonPatchDocument patch = PatchHelper.GetPatchForObject(
-                        originalJson,
-                        currentJson);
-
-            var originalObj = JsonConvert.DeserializeObject(originalJson);
-
-            var currentObj = JsonConvert.DeserializeObject(originalJson);
-            patch.ApplyTo(currentObj);
-
-            if (expectedPatch != null)
-            {
-                bool matchesExpectedPatch = JToken.DeepEquals(JToken.Parse(expectedPatch), JToken.Parse(JsonConvert.SerializeObject(patch)));
-
-                if (!matchesExpectedPatch)
-                {
-                    throw new Exception($"Expected Patch Does Not Match. Expected {expectedPatch}. Received {JsonConvert.SerializeObject(patch)}");
-                }
-            }
-
-            return JToken.DeepEquals(JObject.Parse(currentJson), JObject.Parse(JsonConvert.SerializeObject(currentObj)));
-        }
+        PatchTestHelper _testHelper = new PatchTestHelper();
 
         [Fact]
         public void AppendixA01_AddingObjectMember()
@@ -42,7 +20,7 @@ namespace NetPatchTests
             string currentJson = "{\"baz\":\"qux\",\"foo\":\"bar\"}";
             string expectedPatch = "[{ \"op\": \"add\", \"path\": \"/baz\", \"value\": \"qux\" }]";
 
-            Assert.True(PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
+            Assert.True(_testHelper.PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
         }
 
         [Fact]
@@ -52,7 +30,7 @@ namespace NetPatchTests
             string currentJson = "{ \"foo\": [ \"bar\", \"qux\", \"baz\" ] }";
             string expectedPatch = "[{ \"op\": \"add\", \"path\": \"/foo/1\", \"value\": \"qux\" }]";
 
-            Assert.True(PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
+            Assert.True(_testHelper.PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
         }
 
         [Fact]
@@ -67,7 +45,7 @@ namespace NetPatchTests
      { ""op"": ""remove"", ""path"": ""/baz"" }
    ]";
 
-            Assert.True(PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
+            Assert.True(_testHelper.PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
         }
 
         [Fact]
@@ -79,7 +57,7 @@ namespace NetPatchTests
      { ""op"": ""remove"", ""path"": ""/foo/1"" }
    ]";
 
-            Assert.True(PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
+            Assert.True(_testHelper.PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
         }
 
         [Fact]
@@ -98,7 +76,7 @@ namespace NetPatchTests
    ]
 ";
 
-            Assert.True(PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
+            Assert.True(_testHelper.PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
         }
 
         [Fact (Skip = "Not implemented")]
@@ -126,7 +104,7 @@ namespace NetPatchTests
      { ""op"": ""move"", ""from"": ""/foo/waldo"", ""path"": ""/qux/thud"" }
    ]";
 
-            Assert.True(PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
+            Assert.True(_testHelper.PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
         }
 
         [Fact (Skip = "Not implemented")]
@@ -138,7 +116,7 @@ namespace NetPatchTests
      { ""op"": ""move"", ""from"": ""/foo/1"", ""path"": ""/foo/3"" }
    ]";
 
-            Assert.True(PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
+            Assert.True(_testHelper.PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
         }
 
 
@@ -157,7 +135,7 @@ namespace NetPatchTests
      { ""op"": ""add"", ""path"": ""/child"", ""value"": { ""grandchild"": { } } }
    ]";
 
-            Assert.True(PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
+            Assert.True(_testHelper.PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
         }
 
 
@@ -170,7 +148,7 @@ namespace NetPatchTests
      { ""op"": ""add"", ""path"": ""/foo/-"", ""value"": [""abc"", ""def""] }
    ]";
 
-            Assert.True(PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
+            Assert.True(_testHelper.PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
         }
     }
 }
