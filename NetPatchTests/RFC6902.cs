@@ -46,7 +46,8 @@ namespace NetPatchTests
         }
 
         [Fact]
-        public void AppendixA02_AddingArrayElement() {
+        public void AppendixA02_AddingArrayElement()
+        {
             string originalJson = "   { \"foo\": [ \"bar\", \"baz\" ] }";
             string currentJson = "{ \"foo\": [ \"bar\", \"qux\", \"baz\" ] }";
             string expectedPatch = "[{ \"op\": \"add\", \"path\": \"/foo/1\", \"value\": \"qux\" }]";
@@ -55,7 +56,8 @@ namespace NetPatchTests
         }
 
         [Fact]
-        public void AppendixA03_RemovingObjectMember() {
+        public void AppendixA03_RemovingObjectMember()
+        {
             string originalJson = @"{
      ""baz"": ""qux"",
      ""foo"": ""bar""
@@ -69,7 +71,8 @@ namespace NetPatchTests
         }
 
         [Fact]
-        public void AppendixA04_RemovingArrayElement() {
+        public void AppendixA04_RemovingArrayElement()
+        {
             string originalJson = @"{ ""foo"": [ ""bar"", ""qux"", ""baz"" ] }";
             string currentJson = @"{ ""foo"": [ ""bar"", ""baz"" ] }";
             string expectedPatch = @"[
@@ -138,33 +141,6 @@ namespace NetPatchTests
             Assert.True(PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
         }
 
-        [Fact (Skip = "Not implemented")]
-        public void AppendixA08_TestingValueSuccess()
-        {
-            string originalJson = @"{
-     ""baz"": ""qux"",
-     ""foo"": [ ""a"", 2, ""c"" ]
-   }";
-            string currentJson = @"";
-            string expectedPatch = @"[
-     { ""op"": ""test"", ""path"": ""/baz"", ""value"": ""qux"" },
-     { ""op"": ""test"", ""path"": ""/foo/1"", ""value"": 2 }
-   ]";
-
-            Assert.True(PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
-        }
-
-        [Fact(Skip = "Not implemented")]
-        public void AppendixA09_TestingValueError()
-        {
-            string originalJson = @"{ ""baz"": ""qux"" }";
-            string currentJson = @"";
-            string expectedPatch = @"[
-     { ""op"": ""test"", ""path"": ""/baz"", ""value"": ""bar"" }
-   ]";
-
-            Assert.True(PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
-        }
 
         [Fact]
         public void AppendixA10_AddingNestedMemberObject()
@@ -184,78 +160,6 @@ namespace NetPatchTests
             Assert.True(PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
         }
 
-        [Fact]
-        public void AppendixA11_IgnoringUnrecognizedElements()
-        {
-            string originalJson = @"{ ""foo"": ""bar"" }";
-            string currentJson = @"{
-     ""foo"": ""bar"",
-     ""baz"": ""qux""
-   }";
-            string expectedPatch = @"[
-     { ""op"": ""add"", ""path"": ""/baz"", ""value"": ""qux"", ""xyz"": 123 }
-   ]";
-
-            Assert.True(PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
-        }
-
-        [Fact(Skip = "Not implemented")]
-        public void AppendixA12_AddingToNonexistentTarget()
-        {
-            string originalJson = @"{ ""foo"": ""bar"" }";
-            string currentJson = @"";
-            string expectedPatch = @"[
-     { ""op"": ""add"", ""path"": ""/baz/bat"", ""value"": ""qux"" }
-   ]";
-
-            Assert.True(PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
-        }
-
-        [Fact(Skip = "Not implemented")]
-        public void AppendixA13_InvalidJsonPatchDocument()
-        {
-            string originalJson = @"";
-            string currentJson = @"";
-            string expectedPatch = @"[
-     { ""op"": ""add"", ""path"": ""/baz"", ""value"": ""qux"", ""op"": ""remove"" }
-   ]";
-
-            Assert.True(PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
-        }
-
-        [Fact(Skip = "Not implemented")]
-        public void AppendixA14_TildeEscapeOrdering()
-        {
-            string originalJson = @"{
-     ""/"": 9,
-     ""~1"": 10
-   }";
-            string currentJson = @"{
-     ""/"": 9,
-     ""~1"": 10
-   }";
-            string expectedPatch = @"[
-     {""op"": ""test"", ""path"": ""/~01"", ""value"": 10}
-   ]
-";
-
-            Assert.True(PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
-        }
-
-        [Fact(Skip = "Not implemented")]
-        public void AppendixA15_ComparingStringsAndNumbers()
-        {
-            string originalJson = @"{
-     ""/"": 9,
-     ""~1"": 10
-   }";
-            string currentJson = @"";
-            string expectedPatch = @"[
-     {""op"": ""test"", ""path"": ""/~01"", ""value"": ""10""}
-   ]";
-
-            Assert.True(PatchRoundTripMatches(originalJson, currentJson, expectedPatch));
-        }
 
         [Fact]
         public void AppendixA16_AddingAnArrayValue()
