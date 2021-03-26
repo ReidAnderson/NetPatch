@@ -1,7 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+
+
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>NetPatch</PackageId>
+<Version>0.0.1</Version>
+<Authors>Reid Anderson</Authors>
   </PropertyGroup>
 
   <ItemGroup>
