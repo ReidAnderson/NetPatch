@@ -15,7 +15,7 @@ namespace NetPatchTests
         [Fact]
         public void BasicSystemTextJsonExample()
         {
-            var patch = PatchHelper.GetPatchForObject("{}", "{}");
+            var patch = JsonPatch.GetPatch("{}", "{}");
             Assert.Equal(1, 1);
         }
 

@@ -3,15 +3,15 @@
 
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <PackageId>NetPatch</PackageId>
 <Version>0.0.1</Version>
 <Authors>Reid Anderson</Authors>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="5.0.3" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="5.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.1" />
     <PackageReference Include="System.Text.Json" Version="5.0.1" />
   </ItemGroup>
 

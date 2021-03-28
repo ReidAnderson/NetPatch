@@ -27,18 +27,18 @@ namespace NetPatchBenchmarking
         [Benchmark]
         public JsonPatchDocument AllAdds()
         {
-            return PatchHelper.GetPatchForObject(originalJson, currentJson);
+            return JsonPatch.GetPatch(originalJson, currentJson);
         }
 
         [Benchmark]
         public JsonPatchDocument SmallChangeMediumObject()
         {
-            return PatchHelper.GetPatchForObject(currentJson, slightlyModifiedJson);
+            return JsonPatch.GetPatch(currentJson, slightlyModifiedJson);
         }
 
         [Benchmark]
         public JsonPatchDocument LargeChangesLargeObject() {
-            return PatchHelper.GetPatchForObject(large1, large2);
+            return JsonPatch.GetPatch(large1, large2);
         }
     }
 }

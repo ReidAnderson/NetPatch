@@ -39,7 +39,7 @@ namespace NetPatchTests
             {
                 for (int i = 1; i < itemCount; i++)
                 {
-                    JsonPatchDocument patch = PatchHelper.GetPatchForObject(sampleList[i - 1], sampleList[i]);
+                    JsonPatchDocument patch = JsonPatch.GetPatch(sampleList[i - 1], sampleList[i]);
                 }
             }).Milliseconds;
 
