@@ -8,19 +8,19 @@ using netjson = System.Text.Json;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Dynamic;
-using System.Linq;
 
 namespace NetPatch
 {
-    public enum Operation {
+    public enum Operation
+    {
         Add,
         Remove
     }
 
-    public class PatchHelper
+    public class JsonPatch
     {
 
-        public static JsonPatchDocument GetPatchForObject(string originalJson, string currentJson)
+        public static JsonPatchDocument GetPatch(string originalJson, string currentJson)
         {
             JsonPatchDocument patch = new JsonPatchDocument();
 
@@ -31,6 +31,13 @@ namespace NetPatch
             }
 
             return patch;
+        }
+
+        public static string GetPatchString(string originalJson, string currentJson)
+        {
+            JsonPatchDocument patchDocument = GetPatch(originalJson, currentJson);
+
+            return netjson.JsonSerializer.Serialize(patchDocument);
         }
 
         // call one level down: path + currentProperty.Name + "/"
@@ -93,10 +100,13 @@ namespace NetPatch
                 List<JsonElement> currentElements = current.EnumerateArray().Select(c => c).ToList();
 
                 Tuple<int?, Operation?> isAddOrRemove = IsAddOrRemove(originalElements, currentElements);
-                if (isAddOrRemove.Item2 == Operation.Add && isAddOrRemove.Item1.HasValue) {
+                if (isAddOrRemove.Item2 == Operation.Add && isAddOrRemove.Item1.HasValue)
+                {
                     patchDocument.Add($"{path}{isAddOrRemove.Item1}", AddAsType(currentElements[isAddOrRemove.Item1.Value], patchDocument));
                     return;
-                } else if (isAddOrRemove.Item2 == Operation.Remove && isAddOrRemove.Item1.HasValue) {
+                }
+                else if (isAddOrRemove.Item2 == Operation.Remove && isAddOrRemove.Item1.HasValue)
+                {
                     patchDocument.Remove($"{path}{isAddOrRemove.Item1}");
                     return;
                 }
@@ -106,7 +116,8 @@ namespace NetPatch
                     for (int i = originalElements.Count(); i < currentElements.Count(); i++)
                     {
                         string pathIdentifier = i.ToString();
-                        if (i == currentElements.Count() - 1){
+                        if (i == currentElements.Count() - 1)
+                        {
                             pathIdentifier = "-";
                         }
                         patchDocument.Add($"{path}{pathIdentifier}", AddAsType(currentElements[i], patchDocument));
@@ -136,11 +147,15 @@ namespace NetPatch
                 case JsonValueKind.Null:
                     return null;
                 case JsonValueKind.Object:
+                    // Unfortunately System.Text.Json doesn't support ExpandoObject at the moment
+                    // https://docs.microsoft.com/en-us/dotnet/standard/serialization/system-text-json-migrate-from-newtonsoft-how-to?pivots=dotnet-5-0#types-without-built-in-support
                     return JsonConvert.DeserializeObject<ExpandoObject>(element.GetRawText());
                 case JsonValueKind.Array:
                     return JArray.Parse(element.GetRawText());
                 case JsonValueKind.Number:
-                    return JToken.Parse(element.GetRawText());
+                    var options = new JsonSerializerOptions();
+                    options.Converters.Add(new ObjectToInferredTypesConverter());
+                    return netjson.JsonSerializer.Deserialize<object>(element.GetRawText(), options);
                 case JsonValueKind.True:
                     return true;
                 case JsonValueKind.False:
@@ -154,12 +169,16 @@ namespace NetPatch
             }
         }
 
-        private static List<int> GetShiftArray(List<JsonElement> originalElements, List<JsonElement> currentElements) {
+        private static List<int> GetShiftArray(List<JsonElement> originalElements, List<JsonElement> currentElements)
+        {
             List<int> shiftFromOriginal = new List<int>();
-            for (int i = 0; i < originalElements.Count(); i++) {
-                for (int j = 0; j < currentElements.Count(); j++) {
-                    if (originalElements[i].GetRawText() == currentElements[j].GetRawText()) {
-                        shiftFromOriginal.Add(j-i);
+            for (int i = 0; i < originalElements.Count(); i++)
+            {
+                for (int j = 0; j < currentElements.Count(); j++)
+                {
+                    if (originalElements[i].GetRawText() == currentElements[j].GetRawText())
+                    {
+                        shiftFromOriginal.Add(j - i);
                     }
                 }
             }
@@ -167,35 +186,70 @@ namespace NetPatch
             return shiftFromOriginal;
         }
 
-        private static Tuple<int?, Operation?> IsAddOrRemove(List<JsonElement> originalElements, List<JsonElement> currentElements) {
+        private static Tuple<int?, Operation?> IsAddOrRemove(List<JsonElement> originalElements, List<JsonElement> currentElements)
+        {
             bool hasChanged = false;
             int? changepoint = null;
             Operation? op = null;
 
             List<int> shiftArray = GetShiftArray(originalElements, currentElements);
 
-            for (int i = 1; i < shiftArray.Count(); i++) {
-                if (shiftArray[i] > 0) {
+            for (int i = 1; i < shiftArray.Count(); i++)
+            {
+                if (shiftArray[i] > 0)
+                {
                     op = Operation.Add;
-                } else if (shiftArray[i] < 0) {
+                }
+                else if (shiftArray[i] < 0)
+                {
                     op = Operation.Remove;
                 }
 
-                if (shiftArray[i -1] != shiftArray[i]) {
-                    if (hasChanged) {
+                if (shiftArray[i - 1] != shiftArray[i])
+                {
+                    if (hasChanged)
+                    {
                         return new Tuple<int?, Operation?>(null, null);
-                    } else {
+                    }
+                    else
+                    {
                         changepoint = i;
                         hasChanged = true;
                     }
                 }
             }
 
-            if (hasChanged) {
+            if (hasChanged)
+            {
                 return new Tuple<int?, Operation?>(changepoint, op);
-            } else {
+            }
+            else
+            {
                 return new Tuple<int?, Operation?>(null, null);
             }
         }
+    }
+
+    public class ObjectToInferredTypesConverter : netjson.Serialization.JsonConverter<object>
+    {
+        public override object Read(
+            ref Utf8JsonReader reader,
+            Type typeToConvert,
+            JsonSerializerOptions options) => reader.TokenType switch
+            {
+                JsonTokenType.True => true,
+                JsonTokenType.False => false,
+                JsonTokenType.Number when reader.TryGetInt64(out long l) => l,
+                JsonTokenType.Number => reader.GetDouble(),
+                JsonTokenType.String when reader.TryGetDateTime(out DateTime datetime) => datetime,
+                JsonTokenType.String => reader.GetString(),
+                _ => JsonDocument.ParseValue(ref reader).RootElement.Clone()
+            };
+
+        public override void Write(
+            Utf8JsonWriter writer,
+            object objectToWrite,
+            JsonSerializerOptions options) =>
+            netjson.JsonSerializer.Serialize(writer, objectToWrite, objectToWrite.GetType(), options);
     }
 }

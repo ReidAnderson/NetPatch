@@ -10,7 +10,7 @@ namespace NetPatchTests {
     public class PatchTestHelper {
         public bool PatchRoundTripMatches(string originalJson, string currentJson, string expectedPatch = null)
         {
-            JsonPatchDocument patch = PatchHelper.GetPatchForObject(
+            JsonPatchDocument patch = JsonPatch.GetPatch(
                         originalJson,
                         currentJson);
 
@@ -34,7 +34,7 @@ namespace NetPatchTests {
             bool areEqual = JToken.DeepEquals(expected, observed);
 
             if (!areEqual) {
-                JsonPatchDocument failPatch = PatchHelper.GetPatchForObject(
+                JsonPatchDocument failPatch = JsonPatch.GetPatch(
                         JsonConvert.SerializeObject(expected),
                         JsonConvert.SerializeObject(observed));
                 throw new Exception($"Round trip failed. Expected {expected}. Received {observed}. Failure patch is {JsonConvert.SerializeObject(failPatch)}");
