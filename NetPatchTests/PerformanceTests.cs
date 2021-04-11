@@ -24,7 +24,7 @@ namespace NetPatchTests
         }
 
         [Fact]
-        public void OneMillionSmallObjects()
+        public void TenThousandSmallObjects()
         {
 
             List<string> sampleList = new List<string>();
