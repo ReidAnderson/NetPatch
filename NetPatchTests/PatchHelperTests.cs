@@ -1,7 +1,7 @@
 using System;
 using Xunit;
 using NetPatch;
-using System.Text.Json;
+using netjson = System.Text.Json;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.JsonPatch;
 using Newtonsoft.Json.Linq;
@@ -13,10 +13,16 @@ namespace NetPatchTests
         PatchTestHelper _testHelper = new PatchTestHelper();
 
         [Fact]
-        public void BasicSystemTextJsonExample()
+        public void NestedArrayObjects()
         {
-            var patch = JsonPatch.GetPatch("{}", "{}");
-            Assert.Equal(1, 1);
+            string originalJson = "{\"someValue\": 3,\"arrayValue\": [{\"something\": 2, \"else\": 4}, {\"something\": 5, \"else\": 3}]}";
+            string currentJson = "{\"someValue\": 3,\"arrayValue\": [{\"something\": 3, \"else\": 4}, {\"something\": 5, \"else\": 3}]}";
+
+            Assert.True(_testHelper.PatchRoundTripMatches(originalJson, currentJson));
+
+            var patch = JsonPatch.GetPatch(originalJson, currentJson);
+
+            Console.WriteLine(netjson.JsonSerializer.Serialize(patch));
         }
 
         [Fact]
