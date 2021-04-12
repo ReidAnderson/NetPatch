@@ -134,7 +134,12 @@ namespace NetPatch
 
                     if (originalElements[i].GetRawText() != currentElements[i].GetRawText())
                     {
-                        patchDocument.Replace($"{path}{i}", AddAsType(currentElements[i], patchDocument));
+                        if (originalElements[i].ValueKind != JsonValueKind.Object && originalElements[i].ValueKind != JsonValueKind.Array) {
+                            patchDocument.Replace($"{path}{i}", AddAsType(currentElements[i], patchDocument));
+                        }
+                        else {
+                            FindPatchDiffs(originalElements[i], currentElements[i], patchDocument, $"{path}{i}/");
+                        }
                     }
                 }
             }

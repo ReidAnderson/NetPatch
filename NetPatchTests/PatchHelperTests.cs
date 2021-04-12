@@ -1,9 +1,10 @@
 using System;
 using Xunit;
 using NetPatch;
-using System.Text.Json;
+using netjson = System.Text.Json;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.JsonPatch.Operations;
 using Newtonsoft.Json.Linq;
 
 namespace NetPatchTests
@@ -13,10 +14,21 @@ namespace NetPatchTests
         PatchTestHelper _testHelper = new PatchTestHelper();
 
         [Fact]
-        public void BasicSystemTextJsonExample()
+        public void NestedArrayObjects()
         {
-            var patch = JsonPatch.GetPatch("{}", "{}");
-            Assert.Equal(1, 1);
+            string originalJson = "{\"someValue\": 3,\"arrayValue\": [{\"something\": 2, \"else\": 4}, {\"something\": 5, \"else\": 3}]}";
+            string currentJson = "{\"someValue\": 3,\"arrayValue\": [{\"something\": 3, \"else\": 4}, {\"something\": 5, \"else\": 3}]}";
+
+            Assert.True(_testHelper.PatchRoundTripMatches(originalJson, currentJson));
+
+            JsonPatchDocument patch = JsonPatch.GetPatch(originalJson, currentJson);
+
+            string jsonPatch = netjson.JsonSerializer.Serialize(patch);
+
+            Assert.Equal(patch.Operations.Count, 1);
+            Assert.Equal(patch.Operations[0].OperationType, OperationType.Replace);
+            Assert.Equal(patch.Operations[0].path, "/arrayValue/0/something");
+            Assert.Equal((long) patch.Operations[0].value, (long) 3);
         }
 
         [Fact]
