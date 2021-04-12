@@ -37,7 +37,7 @@ namespace NetPatch
         {
             JsonPatchDocument patchDocument = GetPatch(originalJson, currentJson);
 
-            return netjson.JsonSerializer.Serialize(patchDocument);
+            return Newtonsoft.Json.JsonConvert.SerializeObject(patchDocument);
         }
 
         // call one level down: path + currentProperty.Name + "/"
