@@ -4,6 +4,7 @@ using NetPatch;
 using netjson = System.Text.Json;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.JsonPatch.Operations;
 using Newtonsoft.Json.Linq;
 
 namespace NetPatchTests
@@ -20,9 +21,14 @@ namespace NetPatchTests
 
             Assert.True(_testHelper.PatchRoundTripMatches(originalJson, currentJson));
 
-            var patch = JsonPatch.GetPatch(originalJson, currentJson);
+            JsonPatchDocument patch = JsonPatch.GetPatch(originalJson, currentJson);
 
-            Console.WriteLine(netjson.JsonSerializer.Serialize(patch));
+            string jsonPatch = netjson.JsonSerializer.Serialize(patch);
+
+            Assert.Equal(patch.Operations.Count, 1);
+            Assert.Equal(patch.Operations[0].OperationType, OperationType.Replace);
+            Assert.Equal(patch.Operations[0].path, "/arrayValue/0/something");
+            Assert.Equal((long) patch.Operations[0].value, (long) 3);
         }
 
         [Fact]
